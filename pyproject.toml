@@ -1,0 +1,27 @@
+[project]
+name = "audience-development"
+version = "0.1.0"
+description = "Signal-Based Content Pipeline for Substack audience development"
+requires-python = ">=3.12"
+dependencies = [
+    "substack_api>=1.2.0",
+    "requests>=2.31",
+    "google-genai>=1.0",
+    "anthropic>=0.50",
+    "beautifulsoup4>=4.12",
+    "pydantic>=2.0",
+    "python-dotenv>=1.0",
+    "tenacity>=8.0",
+    "html2text>=2024.2",
+]
+
+[project.scripts]
+pipeline = "scripts.run_pipeline:main"
+discover = "scripts.run_discovery:main"
+
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.backends._legacy:_Backend"
+
+[tool.setuptools.packages.find]
+include = ["src*", "scripts*"]

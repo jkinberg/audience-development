@@ -1,0 +1,68 @@
+{
+  "theme_clusters": [
+    {
+      "name": "AI + Product Craft",
+      "weight": "HIGH",
+      "description": "How AI agents change building, team structure, and product development. Includes: AI coding workflows, agent architecture, AI-assisted product management, human-AI collaboration patterns, AI transformation in organizations.",
+      "example_signals": ["AI coding workflows", "agent architecture", "human-AI collaboration", "AI-assisted PM", "AI team restructuring"]
+    },
+    {
+      "name": "Media Industry Dynamics",
+      "weight": "HIGH",
+      "description": "The business, distribution, and survival questions facing news and media companies. Includes: media business models, streaming economics, audience development for publishers, platform shifts, creator economy intersections with traditional media.",
+      "example_signals": ["media business models", "streaming economics", "audience development", "platform shifts", "creator economy meets traditional media"]
+    },
+    {
+      "name": "Journalism + AI Tooling",
+      "weight": "HIGH",
+      "description": "The specific intersection of newsroom workflows and AI capabilities. Includes: AI for fact-checking, newsroom automation, AI and editorial ethics, open-source journalism tools, local news innovation.",
+      "example_signals": ["AI for fact-checking", "newsroom automation", "editorial ethics and AI", "journalism tools", "local news innovation"]
+    },
+    {
+      "name": "Career Identity & Resilience",
+      "weight": "MEDIUM",
+      "description": "Job transitions, what work means, leadership under uncertainty. Includes: layoff recovery, identity beyond title, navigating career change, leadership philosophy, resilience frameworks.",
+      "example_signals": ["layoff recovery", "identity beyond title", "career change", "leadership under uncertainty", "resilience"]
+    },
+    {
+      "name": "Creator/Audience Building Mechanics",
+      "weight": "MEDIUM",
+      "description": "How individuals build audiences, platform mechanics, content strategy. Includes: Substack growth tactics, newsletter strategy, video/podcast production, audience engagement patterns.",
+      "example_signals": ["Substack growth", "newsletter strategy", "content distribution", "audience engagement", "creator tools"]
+    }
+  ],
+  "noise_filters": [
+    {
+      "name": "Personal milestone celebrations",
+      "action": "reduce_score",
+      "exception": "Contains substantive industry commentary beyond the announcement"
+    },
+    {
+      "name": "Pure political commentary",
+      "action": "reduce_score",
+      "exception": "Connected to media/tech/product themes"
+    },
+    {
+      "name": "Art/visual without editorial substance",
+      "action": "reduce_score",
+      "exception": null
+    },
+    {
+      "name": "Generic motivational content",
+      "action": "reduce_score",
+      "exception": "Contains specific, earned insight"
+    },
+    {
+      "name": "Mega-accounts (500K+ followers)",
+      "action": "reduce_score",
+      "exception": "Genuinely contrarian or additive take"
+    }
+  ],
+  "scoring": {
+    "theme_fit_max": 5,
+    "reshare_potential_max": 3,
+    "creator_value_max": 2,
+    "digest_threshold": 6,
+    "high_signal_threshold": 7
+  }
+}

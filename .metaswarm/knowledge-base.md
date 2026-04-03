@@ -7,10 +7,32 @@
 - Raw archive API (`/api/v1/archive`) returns all metadata needed for scoring in one call per publication
 - Full content available via slug-based fetch (`/api/v1/posts/{slug}`) without auth for free posts
 - Rate limiting not an issue at 40-60 publications with 0.5s delays
+- Substack Notes/restack activity is NOT accessible via any public API endpoint — no endpoint found for user Notes, restacks, or activity feed without auth
 
 ## Substack Landscape (2026-04-03)
-- Only ~8 of 15 watchlist authors have active Substack publications
+- Only ~8 of 15 original watchlist authors have active Substack publications
 - Many LinkedIn-followed authors are dormant, "coming soon," or guest contributors on other pubs
 - The media/product/AI niche is sparse on Substack — discovery engine is essential
 - Authors ≠ Publications: some authors contribute to other pubs (Claire Vo → Lenny's, Kenyatta → EAO)
-- Current active watchlist is ~13 publications; need to grow to 40-60 via Phase 2 discovery
+
+## Day 1 Build (2026-04-03)
+- Watchlist expanded from 13 seed → 44 publications via recommendation graph crawl (depth 1)
+- 21 Tier 1 + 23 Tier 2 publications, 13 seed + 31 discovered
+- 3-day test fetch: 20 posts from 44 pubs, zero errors — volume looks right for 5-7 posts/day
+- Discovery crawled 82 unique publications from 13 seeds, scored down to 77 candidates, ~31 approved
+- Depth 2 crawling added zero new publications beyond depth 1 — recommend skipping depth 2 in future runs
+- Newsletter.get_recommendations() returns URLs WITHOUT https:// prefix — must normalize in code
+- feedback.py deferred to Week 2: Notes API not available, need manual fallback (CLI logger or digest marking)
+
+## Key Publication URLs (non-obvious slugs)
+- Julie Zhuo: `lg.substack.com` (The Looking Glass) + `opinionatedintelligence.substack.com`
+- John Cutler: `cutlefish.substack.com` (The Beautiful Mess)
+- Aakash Gupta: `www.news.aakashg.com` (custom domain)
+- Lenny Rachitsky: `www.lennysnewsletter.com` (custom domain)
+
+## Design Decisions (from brainstorm + review, 2026-04-03)
+- Two-stage scoring: Gemini 3.1 Flash (metadata, classification) → Sonnet/Gemini 3.1 Pro (full content, creative)
+- Stage 1 threshold: score ≥ 7 = HIGH SIGNAL (gets enrichment), score 6 = WORTH A LOOK (no enrichment)
+- Markdown-only output for Phase 1; Zapier webhook is a distinct future feature
+- Pydantic models for all inter-stage data; intermediate state files for resumable runs
+- Passive feedback loop (watch Josh's Substack activity) was preferred design, but Notes API unavailable

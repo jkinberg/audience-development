@@ -1,34 +1,56 @@
 # Audience Development — Signal-Based Content Pipeline
 
 ## Project Overview
-A content pipeline for Substack audience development. Monitors publications, scores posts against a Signal Profile, and surfaces reshare candidates via daily digest.
+A content pipeline for Substack audience development. Monitors ~44 publications, scores posts against a Signal Profile (5 theme clusters), and surfaces reshare candidates via daily markdown digest.
 
 ## Architecture
 - **Language:** Python 3.14
-- **Substack data:** `substack_api` library + raw Substack API (`/api/v1/archive`, `/api/v1/posts/{slug}`)
-- **Scoring:** Google Gemini Flash API for classification/scoring, not Claude (cost optimization)
-- **Config:** JSON files for watchlist, Signal Profile, scoring thresholds, reshare history
-- **Output:** Markdown digest, delivery mechanism TBD
-- **Runtime:** Local dev, cloud deployment (TBD) for production cron
+- **Substack data:** Raw Substack API for daily fetches (`/api/v1/archive`, `/api/v1/posts/{slug}`). Library (`substack_api`) used only for discovery (`get_recommendations()`, `User`, `Category`).
+- **Scoring (Stage 1):** Gemini 3.1 Flash — classifies posts from metadata only (title, subtitle, description, truncated_body_text). Cheap, fast, sufficient for theme matching.
+- **Enrichment (Stage 2):** Claude Sonnet 4.6 or Gemini 3.1 Pro — full content fetch + quote extraction + angle suggestions. Only for posts scoring ≥ 7.
+- **Config:** JSON files in `config/` — watchlist, signal_profile, pipeline settings
+- **Output:** Markdown digest in `output/digests/`. Zapier webhook is a future feature.
+- **Data models:** Pydantic models in `src/models.py` for typed data flow between stages
+- **Runtime:** Local dev now, cloud cron (GitHub Actions or Railway) for production
 
 ## Key Technical Decisions
-- Use raw Substack archive API for daily batch pulls (library has bugs with cross-posts and redirects)
-- Use slug-based content fetch (`/api/v1/posts/{slug}`) for full text — more reliable than library's ID-based fetch
-- Use library's `User`, `Newsletter.get_recommendations()`, and `Category` classes where they work correctly
-- Two-pass scoring: metadata-only pass 1 (all posts), full content pass 2 (posts scoring ≥ 6 only)
+- Raw Substack archive API for daily batch pulls (library has bugs with cross-posts and redirects)
+- Slug-based content fetch (`/api/v1/posts/{slug}`) for full text — more reliable than library's ID-based fetch
+- Two-stage scoring: metadata-only Stage 1 (all posts via Gemini Flash), full content Stage 2 (posts ≥ 7 via Sonnet/Pro)
+- Substack Notes API is NOT publicly accessible — feedback.py deferred to Week 2 with manual fallback
+- Intermediate state files in `data/runs/YYYY-MM-DD/` for resumable pipeline runs
 
 ## Project Structure
 ```
-planning/          — strategy docs, project briefs, Day 0 findings
-corpus/            — reaction data exports (LinkedIn, Substack)
-scripts/           — pipeline scripts and utilities
+src/                — pipeline source code (models, fetch, score, enrich, digest, discover, utils)
+config/             — runtime config (watchlist.json, signal_profile.json, pipeline.json)
+data/               — runtime data (digest_history.json, reshare_log.json, runs/, discovery_candidates.json)
+output/digests/     — generated markdown digests
+scripts/            — entry points (run_pipeline.py, run_discovery.py, day0_validation.py)
+planning/           — strategy docs, project briefs, Day 0 findings
+docs/plans/         — design documents
+corpus/             — reaction data exports (LinkedIn, Substack articles)
+tests/golden_set/   — scoring validation posts (to be populated)
 ```
 
 ## Commands
 ```bash
-source .venv/bin/activate    # activate virtualenv
-python scripts/day0_validation.py  # run API validation
+source .venv/bin/activate              # activate virtualenv
+python scripts/day0_validation.py      # API validation
+python -c "from src.fetch import load_watchlist, fetch_all_posts; ..."  # test fetch
 ```
 
+## Build Status (as of 2026-04-03)
+- **Day 0:** Complete — API validated, findings documented
+- **Day 1:** Complete — fetch, discover, watchlist expanded to 44 publications, Notes API validated (not available)
+- **Day 2:** Not started — scoring (Gemini Flash) + enrichment (Sonnet/Pro)
+- **Day 3:** Not started — digest generation + pipeline orchestration
+
 ## Dependencies
-Managed via pip in `.venv/`. No requirements.txt yet — create one before deployment.
+Managed via pip in `.venv/` and `requirements.txt`. Key packages: substack_api, google-genai, anthropic, pydantic, beautifulsoup4, html2text, tenacity, python-dotenv.
+
+## Environment Variables
+```
+GEMINI_API_KEY=     # Stage 1 scoring + discovery publication scoring
+ANTHROPIC_API_KEY=  # Stage 2 enrichment (Claude Sonnet)
+```

@@ -1,0 +1,31 @@
+{
+  "user": {
+    "substack_handle": "joshkinberg",
+    "substack_url": "https://joshkinberg.substack.com"
+  },
+  "fetch": {
+    "lookback_days": 1,
+    "first_run_lookback_days": 3,
+    "delay_between_pubs_seconds": 0.75,
+    "max_posts_per_pub": 10,
+    "timeout_seconds": 15
+  },
+  "scoring": {
+    "stage1_model": "gemini-3.1-flash",
+    "stage1_temperature": 0,
+    "stage2_model": "claude-sonnet-4-6",
+    "stage2_fallback_model": "gemini-3.1-pro"
+  },
+  "output": {
+    "digest_dir": "output/digests"
+  },
+  "feedback": {
+    "lookback_days": 7,
+    "enabled": true
+  },
+  "discovery": {
+    "recommendation_depth": 2,
+    "min_recent_posts": 3,
+    "min_publication_score": 5.0
+  }
+}

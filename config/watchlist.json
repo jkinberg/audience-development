@@ -1,0 +1,356 @@
+{
+  "publications": [
+    {
+      "url": "https://eshap.substack.com",
+      "name": "Media War & Peace",
+      "author": "Evan Shapiro",
+      "tier": 1,
+      "added": "2026-04-03",
+      "source": "seed"
+    },
+    {
+      "url": "https://lg.substack.com",
+      "name": "The Looking Glass",
+      "author": "Julie Zhuo",
+      "tier": 1,
+      "added": "2026-04-03",
+      "source": "seed"
+    },
+    {
+      "url": "https://opinionatedintelligence.substack.com",
+      "name": "Opinionated Intelligence",
+      "author": "Julie Zhuo",
+      "tier": 1,
+      "added": "2026-04-03",
+      "source": "seed"
+    },
+    {
+      "url": "https://miketrap.substack.com",
+      "name": "People Stuff",
+      "author": "Mike Troiano",
+      "tier": 1,
+      "added": "2026-04-03",
+      "source": "seed"
+    },
+    {
+      "url": "https://creatorama.substack.com",
+      "name": "Creatorama",
+      "author": "Tim Shey",
+      "tier": 1,
+      "added": "2026-04-03",
+      "source": "seed"
+    },
+    {
+      "url": "https://brianbalfour.substack.com",
+      "name": "Brian Balfour",
+      "author": "Brian Balfour",
+      "tier": 1,
+      "added": "2026-04-03",
+      "source": "seed"
+    },
+    {
+      "url": "https://felixsimon.substack.com",
+      "name": "Felix Simon",
+      "author": "Felix Simon",
+      "tier": 1,
+      "added": "2026-04-03",
+      "source": "seed"
+    },
+    {
+      "url": "https://descriptapp.substack.com",
+      "name": "Fort Human",
+      "author": "Descript",
+      "tier": 1,
+      "added": "2026-04-03",
+      "source": "seed"
+    },
+    {
+      "url": "https://cutlefish.substack.com",
+      "name": "The Beautiful Mess",
+      "author": "John Cutler",
+      "tier": 1,
+      "added": "2026-04-03",
+      "source": "seed"
+    },
+    {
+      "url": "https://www.lennysnewsletter.com",
+      "name": "Lenny's Newsletter",
+      "author": "Lenny Rachitsky",
+      "tier": 2,
+      "added": "2026-04-03",
+      "source": "seed"
+    },
+    {
+      "url": "https://www.news.aakashg.com",
+      "name": "Aakash's Newsletter",
+      "author": "Aakash Gupta",
+      "tier": 2,
+      "added": "2026-04-03",
+      "source": "seed"
+    },
+    {
+      "url": "https://bradstulberg.substack.com",
+      "name": "Brad Stulberg",
+      "author": "Brad Stulberg",
+      "tier": 2,
+      "added": "2026-04-03",
+      "source": "seed"
+    },
+    {
+      "url": "https://everybodyatonce.substack.com",
+      "name": "Everybody At Once",
+      "author": "Kenyatta Cheese",
+      "tier": 2,
+      "added": "2026-04-03",
+      "source": "seed"
+    },
+    {
+      "url": "https://www.streamingmadeeasy.com",
+      "name": "Streaming Made Easy",
+      "author": "Marion Ranchet",
+      "tier": 1,
+      "added": "2026-04-03",
+      "source": "discovery"
+    },
+    {
+      "url": "https://dougshapiro.substack.com",
+      "name": "Doug Shapiro",
+      "author": "Doug Shapiro",
+      "tier": 1,
+      "added": "2026-04-03",
+      "source": "discovery"
+    },
+    {
+      "url": "https://entertainment.substack.com",
+      "name": "Entertainment Strategy Guy",
+      "author": "Entertainment Strategy Guy",
+      "tier": 1,
+      "added": "2026-04-03",
+      "source": "discovery"
+    },
+    {
+      "url": "https://aiwritersstudio.substack.com",
+      "name": "AI Writers Studio",
+      "author": "Fred Graver",
+      "tier": 1,
+      "added": "2026-04-03",
+      "source": "discovery"
+    },
+    {
+      "url": "https://newsletter.baratunde.com",
+      "name": "Baratunde Thurston",
+      "author": "Baratunde Thurston",
+      "tier": 1,
+      "added": "2026-04-03",
+      "source": "discovery"
+    },
+    {
+      "url": "https://www.usermag.co",
+      "name": "User Mag",
+      "author": "Taylor Lorenz",
+      "tier": 1,
+      "added": "2026-04-03",
+      "source": "discovery"
+    },
+    {
+      "url": "https://www.sachinrekhi.com",
+      "name": "Sachin Rekhi",
+      "author": "Sachin Rekhi",
+      "tier": 1,
+      "added": "2026-04-03",
+      "source": "discovery"
+    },
+    {
+      "url": "https://www.caseyaccidental.com",
+      "name": "Casey Accidental",
+      "author": "Casey Winters",
+      "tier": 1,
+      "added": "2026-04-03",
+      "source": "discovery"
+    },
+    {
+      "url": "https://www.bensbites.com",
+      "name": "Ben's Bites",
+      "author": "Ben Tossell",
+      "tier": 1,
+      "added": "2026-04-03",
+      "source": "discovery"
+    },
+    {
+      "url": "https://simonw.substack.com",
+      "name": "Simon Willison",
+      "author": "Simon Willison",
+      "tier": 1,
+      "added": "2026-04-03",
+      "source": "discovery"
+    },
+    {
+      "url": "https://theskip.substack.com",
+      "name": "The Skip",
+      "author": "Nikhyl Singhal",
+      "tier": 1,
+      "added": "2026-04-03",
+      "source": "discovery"
+    },
+    {
+      "url": "https://marily.substack.com",
+      "name": "Marily Nika",
+      "author": "Marily Nika",
+      "tier": 1,
+      "added": "2026-04-03",
+      "source": "discovery"
+    },
+    {
+      "url": "https://tedhope.substack.com",
+      "name": "Ted Hope",
+      "author": "Ted Hope",
+      "tier": 2,
+      "added": "2026-04-03",
+      "source": "discovery"
+    },
+    {
+      "url": "https://fredfilms.substack.com",
+      "name": "Fred Seibert",
+      "author": "Fred Seibert",
+      "tier": 2,
+      "added": "2026-04-03",
+      "source": "discovery"
+    },
+    {
+      "url": "https://blog.ravi-mehta.com",
+      "name": "Ravi Mehta",
+      "author": "Ravi Mehta",
+      "tier": 2,
+      "added": "2026-04-03",
+      "source": "discovery"
+    },
+    {
+      "url": "https://www.danhock.co",
+      "name": "Dan Hockenmaier",
+      "author": "Dan Hockenmaier",
+      "tier": 2,
+      "added": "2026-04-03",
+      "source": "discovery"
+    },
+    {
+      "url": "https://newsletter.weskao.com",
+      "name": "Wes Kao",
+      "author": "Wes Kao",
+      "tier": 2,
+      "added": "2026-04-03",
+      "source": "discovery"
+    },
+    {
+      "url": "https://founderthings.substack.com",
+      "name": "Founder Things",
+      "author": "Helena Price",
+      "tier": 2,
+      "added": "2026-04-03",
+      "source": "discovery"
+    },
+    {
+      "url": "https://hellooperator.substack.com",
+      "name": "Hello Operator",
+      "author": "Paul Stansik",
+      "tier": 2,
+      "added": "2026-04-03",
+      "source": "discovery"
+    },
+    {
+      "url": "https://douglevin.substack.com",
+      "name": "Doug Levin",
+      "author": "Doug Levin",
+      "tier": 2,
+      "added": "2026-04-03",
+      "source": "discovery"
+    },
+    {
+      "url": "https://investinginai.substack.com",
+      "name": "Investing in AI",
+      "author": "Rob May",
+      "tier": 2,
+      "added": "2026-04-03",
+      "source": "discovery"
+    },
+    {
+      "url": "https://www.leahtharin.com",
+      "name": "Leah Tharin",
+      "author": "Leah Tharin",
+      "tier": 2,
+      "added": "2026-04-03",
+      "source": "discovery"
+    },
+    {
+      "url": "https://runthebusiness.substack.com",
+      "name": "Run the Business",
+      "author": "Ibrahim Bashir",
+      "tier": 2,
+      "added": "2026-04-03",
+      "source": "discovery"
+    },
+    {
+      "url": "https://www.elenaverna.com",
+      "name": "Elena Verna",
+      "author": "Elena Verna",
+      "tier": 2,
+      "added": "2026-04-03",
+      "source": "discovery"
+    },
+    {
+      "url": "https://newsletter.pragmaticengineer.com",
+      "name": "The Pragmatic Engineer",
+      "author": "Gergely Orosz",
+      "tier": 2,
+      "added": "2026-04-03",
+      "source": "discovery"
+    },
+    {
+      "url": "https://newsletter.mkt1.co",
+      "name": "MKT1",
+      "author": "Emily Kramer",
+      "tier": 2,
+      "added": "2026-04-03",
+      "source": "discovery"
+    },
+    {
+      "url": "https://newsletter.eng-leadership.com",
+      "name": "Engineering Leadership",
+      "author": "Gregor Ojstersek",
+      "tier": 2,
+      "added": "2026-04-03",
+      "source": "discovery"
+    },
+    {
+      "url": "https://refactoring.fm",
+      "name": "Refactoring",
+      "author": "Luca Rossi",
+      "tier": 2,
+      "added": "2026-04-03",
+      "source": "discovery"
+    },
+    {
+      "url": "https://www.derekthompson.org",
+      "name": "Derek Thompson",
+      "author": "Derek Thompson",
+      "tier": 2,
+      "added": "2026-04-03",
+      "source": "discovery"
+    },
+    {
+      "url": "https://thisisunprompted.substack.com",
+      "name": "Unprompted",
+      "author": "Ollie Bartlett",
+      "tier": 2,
+      "added": "2026-04-03",
+      "source": "discovery"
+    },
+    {
+      "url": "https://aatir.substack.com",
+      "name": "Aatir Abdul Rauf",
+      "author": "Aatir Abdul Rauf",
+      "tier": 2,
+      "added": "2026-04-03",
+      "source": "discovery"
+    }
+  ]
+}
