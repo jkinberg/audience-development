@@ -1,0 +1,29 @@
+{
+  "project": {
+    "name": "audience-development",
+    "description": "Signal-Based Content Pipeline for Substack audience growth",
+    "language": "python",
+    "python_version": "3.14",
+    "framework": null,
+    "test_runner": null,
+    "coverage_threshold": null
+  },
+  "tools": {
+    "external_ai": false,
+    "gemini_api": true,
+    "gemini_purpose": "content scoring and classification (Gemini Flash)"
+  },
+  "quality": {
+    "review_gate": "light",
+    "adversarial_reviewers": 1,
+    "plan_review_gate": false,
+    "design_review_gate": false
+  },
+  "repository": {
+    "hosting": null,
+    "ci_cd": null,
+    "main_branch": "main"
+  },
+  "setup_date": "2026-04-03",
+  "metaswarm_version": "marketplace-plugin"
+}

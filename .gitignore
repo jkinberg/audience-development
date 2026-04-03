@@ -1,0 +1,29 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+
+# Environment and secrets
+.env
+*.key
+credentials.json
+
+# macOS
+.DS_Store
+
+# Data exports (large files, regenerable)
+corpus/linkedin/dataset_linkedin-profile-reactions_*.json
+corpus/linkedin/linkedin-posts-export-*/
+corpus/substack/substack-reactions-html-export
+
+# IDE
+.vscode/
+.idea/
+
+# Pipeline output
+output/
+digests/
