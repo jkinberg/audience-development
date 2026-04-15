@@ -7,10 +7,12 @@
 - Raw archive API (`/api/v1/archive`) returns all metadata needed for scoring in one call per publication
 - Full content available via slug-based fetch (`/api/v1/posts/{slug}`) without auth for free posts
 - Rate limiting not an issue at 40-60 publications with 0.5s delays
-- Substack Notes/restack activity is NOT accessible via any public API endpoint — no endpoint found for user Notes, restacks, or activity feed without auth
-- Open RSS (openrss.org) can theoretically generate an RSS feed from a Substack profile page (including Notes), but the service is unreliable — timed out during testing (2026-04-03). The original article (tinkeringwithideas.io) also noted server issues.
-- Substack's built-in RSS (`/feed`) only returns newsletter posts, not Notes or restacks
-- Feedback.py plan: manual CLI logger for Phase 1, revisit Open RSS or authenticated API later
+- **Notes API FOUND (2026-04-14):** `GET {publication_url}/api/v1/notes` returns user's Notes feed — 13 items with body text, timestamps, context. No auth required. This replaces the earlier finding that Notes were inaccessible.
+- Notes are typed as `comment` with `context.type = "note"`, body text is truncated (~150 chars), timestamps in ISO format
+- Endpoint: `https://joshkinberg.substack.com/api/v1/notes` → returns `{items: [...], nextCursor: ...}`
+- This makes the passive feedback monitor buildable: pull Notes, match URLs/titles against digest items, capture commentary
+- Open RSS (openrss.org) is unreliable — timed out during testing. Not needed now that the API works.
+- Substack's built-in RSS (`/feed`) only returns newsletter posts, not Notes
 
 ## Substack Landscape (2026-04-03)
 - Only ~8 of 15 original watchlist authors have active Substack publications
