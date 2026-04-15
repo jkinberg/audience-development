@@ -56,6 +56,18 @@
 - Run command: `./run.sh` (shell script handles venv activation and PYTHONPATH)
 - Pipeline runtime ~3.5 min for 44 pubs, 18 posts scored, 7 enriched
 
+## Email Delivery (2026-04-15)
+- Gmail SMTP via app password works. Email delivers to inbox (not spam).
+- Markdown → HTML conversion via `markdown2` with inline CSS for email compatibility
+- Substack app deep links: custom domain URLs rewritten to `*.substack.com` by extracting subdomain from `publishedBylines[0].publicationUsers[0].publication.subdomain` in the archive response
+- Deep links confirmed working on iPhone — opens directly in Substack app
+- One edge case: Ben's Bites (`www.bensbites.com`) didn't get rewritten — byline data may not include subdomain for all publications
+- Email subject: "Substack Signal Pipeline — {date} — N high signal"
+- Delivery is non-blocking — if email fails, digest file is still written
+- Config: `delivery.enabled`, `delivery.to_email`, `delivery.skip_empty` in pipeline.json
+- Env vars: `GMAIL_ADDRESS`, `GMAIL_APP_PASSWORD` in .env
+- Claude Cowork sandbox couldn't run the pipeline (404 errors with Substack API) — local or cloud deployment required
+
 ## Design Decisions (from brainstorm + review, 2026-04-03)
 - Two-stage scoring: Gemini 3.1 Flash (metadata, classification) → Sonnet/Gemini 3.1 Pro (full content, creative)
 - Stage 1 threshold: score ≥ 7 = HIGH SIGNAL (gets enrichment), score 6 = WORTH A LOOK (no enrichment)
