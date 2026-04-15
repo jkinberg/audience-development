@@ -24,6 +24,6 @@ corpus/substack/substack-reactions-html-export
 .vscode/
 .idea/
 
-# Pipeline output
-output/
-digests/
+# Pipeline output (runs are ephemeral, digests are kept for history)
+output/digests/*.json
+data/runs/
