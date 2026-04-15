@@ -44,6 +44,16 @@
 - 7-day fetch from 44 pubs: 47 posts. On daily cadence ~6-7 posts/day, expect 3-5 high signal after scoring.
 - Full pipeline (fetch + score + enrich 5) runs in ~4 minutes
 
+## Day 3 Build (2026-04-14)
+- digest.py and run_pipeline.py built and tested end-to-end
+- First digest was not useable — format was confusing, quotes out of context, reshare angles felt generic
+- Reworked: replaced angles with 2-3 sentence article summaries + 1-3 pull quotes for scanning
+- Title links are H2 headings with numbered entries, link is the first thing you see
+- "Also noted" section for score-6 posts continues numbering from high signal
+- Zapier webhook removed from config — delivery via local markdown file for now
+- Run command: `PYTHONPATH=. python3 scripts/run_pipeline.py` (needs PYTHONPATH hack, should fix)
+- Pipeline runtime ~3.5 min for 44 pubs, 18 posts scored, 7 enriched
+
 ## Design Decisions (from brainstorm + review, 2026-04-03)
 - Two-stage scoring: Gemini 3.1 Flash (metadata, classification) → Sonnet/Gemini 3.1 Pro (full content, creative)
 - Stage 1 threshold: score ≥ 7 = HIGH SIGNAL (gets enrichment), score 6 = WORTH A LOOK (no enrichment)
