@@ -11,6 +11,7 @@ from src.score import score_all_posts, load_signal_profile, load_pipeline_config
 from src.enrich import enrich_top_posts
 from src.digest import build_digest_entries, render_markdown, write_digest, update_digest_history, send_to_zapier
 from src.deliver import send_digest_email
+from src.feedback import check_for_reshares
 from src.utils import setup_logging
 
 
@@ -138,6 +139,14 @@ def main():
 
     # Update history
     update_digest_history(entries, len(posts), date=today)
+
+    # Check for reshares from previous digests (feedback loop)
+    feedback_config = config.get("feedback", {})
+    if feedback_config.get("enabled", True):
+        substack_url = config.get("user", {}).get("substack_url", "")
+        if substack_url:
+            logger.info("--- FEEDBACK ---")
+            reshares = check_for_reshares(substack_url)
 
     # Summary
     logger.info(f"=== Pipeline complete ===")
