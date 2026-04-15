@@ -60,7 +60,7 @@ def render_markdown(
     worth_a_look = [e for e in entries if e.tier == "worth_a_look"]
 
     lines: list[str] = []
-    lines.append(f"# Signal Pipeline — {date}")
+    lines.append(f"# Substack Signal Pipeline — {date}")
     lines.append(f"*{len(entries)} posts from {stats.get('publications_monitored', 0)} publications*")
     lines.append("")
 
@@ -72,7 +72,7 @@ def render_markdown(
             post_date = p.post_date.strftime("%b %d")
             themes = ", ".join(s.theme_clusters) if s.theme_clusters else ""
 
-            lines.append(f"## {i}. [{p.title}]({p.canonical_url})")
+            lines.append(f"## {i}. [{p.title}]({p.substack_url or p.canonical_url})")
             lines.append(f"{p.author_name} · {p.publication_name} · {post_date} · {s.total_score}/10")
             if themes:
                 lines.append(f"*{themes}*")
@@ -100,7 +100,7 @@ def render_markdown(
         for i, entry in enumerate(worth_a_look, start_num):
             p = entry.post
             s = entry.score
-            lines.append(f"{i}. [{p.title}]({p.canonical_url}) — {p.author_name} · {s.one_line_reason}")
+            lines.append(f"{i}. [{p.title}]({p.substack_url or p.canonical_url}) — {p.author_name} · {s.one_line_reason}")
 
         lines.append("")
         lines.append("---")

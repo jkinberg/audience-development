@@ -16,6 +16,7 @@ class Post(BaseModel):
     wordcount: int | None = None
     slug: str
     canonical_url: str
+    substack_url: str = ""  # Always *.substack.com — for app deep linking
     audience: str = "everyone"
 
     # Engagement

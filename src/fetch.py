@@ -29,6 +29,28 @@ def load_digest_history(path: str = "data/digest_history.json") -> set[int]:
         return set()
 
 
+def _extract_substack_url(raw: dict, publication_url: str) -> str:
+    """Build a *.substack.com URL for app deep linking."""
+    slug = raw.get("slug", "")
+    canonical = raw.get("canonical_url", "")
+
+    # If canonical is already on substack.com, use it
+    if "substack.com" in canonical:
+        return canonical
+
+    # Try to extract subdomain from bylines
+    bylines = raw.get("publishedBylines", [])
+    if bylines:
+        for pu in bylines[0].get("publicationUsers", []):
+            pub = pu.get("publication", {})
+            subdomain = pub.get("subdomain", "")
+            if subdomain and slug:
+                return f"https://{subdomain}.substack.com/p/{slug}"
+
+    # Fallback to canonical
+    return canonical
+
+
 def parse_post(raw: dict, publication_url: str, publication_name: str) -> Post | None:
     """Parse a raw archive API dict into a Post model. Returns None on failure."""
     try:
@@ -47,6 +69,7 @@ def parse_post(raw: dict, publication_url: str, publication_name: str) -> Post |
             wordcount=raw.get("wordcount"),
             slug=raw.get("slug", ""),
             canonical_url=raw.get("canonical_url", ""),
+            substack_url=_extract_substack_url(raw, publication_url),
             audience=raw.get("audience", "everyone"),
             reaction_count=raw.get("reaction_count", 0) or 0,
             reactions=raw.get("reactions") or {},

@@ -9,7 +9,8 @@ from pathlib import Path
 from src.fetch import load_watchlist, load_digest_history, fetch_all_posts, save_fetched_posts
 from src.score import score_all_posts, load_signal_profile, load_pipeline_config, save_scored_posts
 from src.enrich import enrich_top_posts
-from src.digest import build_digest_entries, render_markdown, write_digest, update_digest_history
+from src.digest import build_digest_entries, render_markdown, write_digest, update_digest_history, send_to_zapier
+from src.deliver import send_digest_email
 from src.utils import setup_logging
 
 
@@ -124,6 +125,16 @@ def main():
 
     md = render_markdown(entries, stats, date=today)
     digest_path = write_digest(md, config["output"]["digest_dir"], date=today)
+
+    # Send to Zapier webhook (non-blocking — digest is already saved)
+    webhook_url = config["output"].get("zapier_webhook_url")
+    if webhook_url:
+        send_to_zapier(md, entries, stats, webhook_url, date=today)
+
+    # Email delivery (non-blocking)
+    delivery_config = config.get("delivery", {})
+    if delivery_config.get("enabled", False):
+        send_digest_email(md, entries, stats, delivery_config, date=today)
 
     # Update history
     update_digest_history(entries, len(posts), date=today)

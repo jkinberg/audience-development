@@ -19,6 +19,12 @@
   "output": {
     "digest_dir": "output/digests"
   },
+  "delivery": {
+    "enabled": true,
+    "to_email": "jkinberg@gmail.com",
+    "subject_template": "Substack Signal Pipeline — {date} — {high_signal_count} high signal",
+    "skip_empty": true
+  },
   "feedback": {
     "lookback_days": 7,
     "enabled": true
