@@ -5,6 +5,9 @@ on:
     - cron: '0 13 * * *'  # 9:00 AM ET (UTC-4 during EDT)
   workflow_dispatch: {}     # Manual trigger for testing
 
+permissions:
+  contents: write
+
 jobs:
   run-pipeline:
     runs-on: ubuntu-latest
