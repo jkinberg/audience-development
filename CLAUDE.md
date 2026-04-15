@@ -6,8 +6,8 @@ A content pipeline for Substack audience development. Monitors ~44 publications,
 ## Architecture
 - **Language:** Python 3.14
 - **Substack data:** Raw Substack API for daily fetches (`/api/v1/archive`, `/api/v1/posts/{slug}`). Library (`substack_api`) used only for discovery (`get_recommendations()`, `User`, `Category`).
-- **Scoring (Stage 1):** Gemini 3.1 Flash — classifies posts from metadata only (title, subtitle, description, truncated_body_text). Cheap, fast, sufficient for theme matching.
-- **Enrichment (Stage 2):** Claude Sonnet 4.6 or Gemini 3.1 Pro — full content fetch + quote extraction + angle suggestions. Only for posts scoring ≥ 7.
+- **Scoring (Stage 1):** Gemini 3.1 Flash Lite (`gemini-3.1-flash-lite-preview`) — classifies posts from metadata only. Temp 0.
+- **Enrichment (Stage 2):** Gemini 3.1 Pro (`gemini-3.1-pro-preview`) — full content fetch + quote extraction + angle suggestions. Only for posts scoring ≥ 7. Claude Sonnet (`claude-sonnet-4-20250514`) as fallback.
 - **Config:** JSON files in `config/` — watchlist, signal_profile, pipeline settings
 - **Output:** Markdown digest in `output/digests/`. Zapier webhook is a future feature.
 - **Data models:** Pydantic models in `src/models.py` for typed data flow between stages
@@ -40,11 +40,11 @@ python scripts/day0_validation.py      # API validation
 python -c "from src.fetch import load_watchlist, fetch_all_posts; ..."  # test fetch
 ```
 
-## Build Status (as of 2026-04-03)
+## Build Status (as of 2026-04-14)
 - **Day 0:** Complete — API validated, findings documented
 - **Day 1:** Complete — fetch, discover, watchlist expanded to 44 publications, Notes API validated (not available)
-- **Day 2:** Not started — scoring (Gemini Flash) + enrichment (Sonnet/Pro)
-- **Day 3:** Not started — digest generation + pipeline orchestration
+- **Day 2:** Complete — score.py (Gemini 3.1 Flash Lite) + enrich.py (Gemini 3.1 Pro) built and tested. 47 posts scored, 5 enriched, zero failures.
+- **Day 3:** Not started — digest.py + run_pipeline.py orchestration. First real digest.
 
 ## Dependencies
 Managed via pip in `.venv/` and `requirements.txt`. Key packages: substack_api, google-genai, anthropic, pydantic, beautifulsoup4, html2text, tenacity, python-dotenv.

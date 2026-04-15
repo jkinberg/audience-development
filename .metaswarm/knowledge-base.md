@@ -8,6 +8,9 @@
 - Full content available via slug-based fetch (`/api/v1/posts/{slug}`) without auth for free posts
 - Rate limiting not an issue at 40-60 publications with 0.5s delays
 - Substack Notes/restack activity is NOT accessible via any public API endpoint — no endpoint found for user Notes, restacks, or activity feed without auth
+- Open RSS (openrss.org) can theoretically generate an RSS feed from a Substack profile page (including Notes), but the service is unreliable — timed out during testing (2026-04-03). The original article (tinkeringwithideas.io) also noted server issues.
+- Substack's built-in RSS (`/feed`) only returns newsletter posts, not Notes or restacks
+- Feedback.py plan: manual CLI logger for Phase 1, revisit Open RSS or authenticated API later
 
 ## Substack Landscape (2026-04-03)
 - Only ~8 of 15 original watchlist authors have active Substack publications
@@ -29,6 +32,17 @@
 - John Cutler: `cutlefish.substack.com` (The Beautiful Mess)
 - Aakash Gupta: `www.news.aakashg.com` (custom domain)
 - Lenny Rachitsky: `www.lennysnewsletter.com` (custom domain)
+
+## Day 2 Build (2026-04-14)
+- score.py and enrich.py built and tested end-to-end
+- Gemini model IDs: `gemini-3.1-flash-lite-preview` (Stage 1), `gemini-3.1-pro-preview` (Stage 2)
+- Claude Sonnet model ID: `claude-sonnet-4-20250514` (Stage 2 fallback)
+- Note: `gemini-2.0-flash` is deprecated for new users — returns 404. Use 2.5 or 3.1 models.
+- Stage 1 scoring: 47/47 posts scored, zero failures, good distribution (10/10 down to 0/10)
+- Stage 2 enrichment: 5/5 posts enriched, zero failures, high-quality quotes and angles
+- Noise filters working: mega-accounts flagged, milestone posts caught, off-topic content scored low
+- 7-day fetch from 44 pubs: 47 posts. On daily cadence ~6-7 posts/day, expect 3-5 high signal after scoring.
+- Full pipeline (fetch + score + enrich 5) runs in ~4 minutes
 
 ## Design Decisions (from brainstorm + review, 2026-04-03)
 - Two-stage scoring: Gemini 3.1 Flash (metadata, classification) → Sonnet/Gemini 3.1 Pro (full content, creative)

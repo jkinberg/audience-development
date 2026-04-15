@@ -11,10 +11,10 @@
     "timeout_seconds": 15
   },
   "scoring": {
-    "stage1_model": "gemini-3.1-flash",
+    "stage1_model": "gemini-3.1-flash-lite-preview",
     "stage1_temperature": 0,
-    "stage2_model": "claude-sonnet-4-6",
-    "stage2_fallback_model": "gemini-3.1-pro"
+    "stage2_model": "gemini-3.1-pro-preview",
+    "stage2_fallback_model": "claude-sonnet-4-20250514"
   },
   "output": {
     "digest_dir": "output/digests"
