@@ -5,6 +5,8 @@ import logging
 from datetime import datetime
 from pathlib import Path
 
+import requests
+
 from src.models import ScoredPost, EnrichedPost, DigestEntry, DigestRun
 
 logger = logging.getLogger("pipeline.digest")
@@ -58,65 +60,49 @@ def render_markdown(
     worth_a_look = [e for e in entries if e.tier == "worth_a_look"]
 
     lines: list[str] = []
-    lines.append(f"# Signal Pipeline — {date} — {len(entries)} posts worth your attention")
+    lines.append(f"# Signal Pipeline — {date}")
+    lines.append(f"*{len(entries)} posts from {stats.get('publications_monitored', 0)} publications*")
     lines.append("")
 
     # HIGH SIGNAL section
     if high_signal:
-        lines.append(f"## HIGH SIGNAL ({len(high_signal)} posts, score ≥ 7)")
-        lines.append("")
-
         for i, entry in enumerate(high_signal, 1):
             p = entry.post
             s = entry.score
-            post_date = p.post_date.strftime("%B %d, %Y")
-            themes = ", ".join(s.theme_clusters) if s.theme_clusters else "general"
+            post_date = p.post_date.strftime("%b %d")
+            themes = ", ".join(s.theme_clusters) if s.theme_clusters else ""
 
-            lines.append(f"### {i}. {p.title}")
-            lines.append(f"**by {p.author_name} · {p.publication_name} · {post_date}**")
-            lines.append(f"Score: {s.total_score}/10 | Themes: {themes}")
+            lines.append(f"## {i}. [{p.title}]({p.canonical_url})")
+            lines.append(f"{p.author_name} · {p.publication_name} · {post_date} · {s.total_score}/10")
+            if themes:
+                lines.append(f"*{themes}*")
             lines.append("")
 
             if entry.enrichment:
-                lines.append(f"> \"{entry.enrichment.best_quote}\"")
+                lines.append(entry.enrichment.summary)
                 lines.append("")
-                if entry.enrichment.quote_context:
-                    lines.append(f"*{entry.enrichment.quote_context}*")
+                for quote in entry.enrichment.pull_quotes:
+                    lines.append(f"> {quote}")
                     lines.append("")
-                lines.append("**Reshare angles:**")
-                for angle in entry.enrichment.angles:
-                    angle_type = angle.get("type", "")
-                    angle_text = angle.get("angle", "")
-                    if angle_type:
-                        lines.append(f"- **[{angle_type}]** {angle_text}")
-                    else:
-                        lines.append(f"- {angle_text}")
-                lines.append("")
             else:
-                lines.append(f"*{s.one_line_reason}*")
+                lines.append(s.one_line_reason)
                 lines.append("")
 
-            lines.append(f"[Read post →]({p.canonical_url})")
-            lines.append("")
             lines.append("---")
             lines.append("")
 
     # WORTH A LOOK section
     if worth_a_look:
-        lines.append(f"## WORTH A LOOK ({len(worth_a_look)} posts, score 6)")
+        lines.append("## Also noted")
         lines.append("")
 
-        for i, entry in enumerate(worth_a_look, len(high_signal) + 1):
+        start_num = len(high_signal) + 1
+        for i, entry in enumerate(worth_a_look, start_num):
             p = entry.post
             s = entry.score
-            themes = ", ".join(s.theme_clusters) if s.theme_clusters else "general"
+            lines.append(f"{i}. [{p.title}]({p.canonical_url}) — {p.author_name} · {s.one_line_reason}")
 
-            lines.append(f"**{i}. {p.title}**")
-            lines.append(f"by {p.author_name} · {p.publication_name} · Score: {s.total_score}/10 | {themes}")
-            lines.append(f"*{s.one_line_reason}*")
-            lines.append(f"[Read post →]({p.canonical_url})")
-            lines.append("")
-
+        lines.append("")
         lines.append("---")
         lines.append("")
 
@@ -188,3 +174,46 @@ def update_digest_history(
         json.dump(history, f, indent=2)
 
     logger.info(f"Digest history updated: {len(entries)} posts recorded for {date}")
+
+
+def send_to_zapier(
+    markdown: str,
+    entries: list[DigestEntry],
+    stats: dict,
+    webhook_url: str,
+    date: str | None = None,
+) -> bool:
+    """POST digest to Zapier webhook. Returns True on success."""
+    if date is None:
+        date = datetime.now().strftime("%Y-%m-%d")
+
+    high_signal = [
+        {
+            "title": e.post.title,
+            "author": e.post.author_name,
+            "publication": e.post.publication_name,
+            "url": e.post.canonical_url,
+            "score": e.score.total_score,
+            "themes": e.score.theme_clusters,
+            "summary": e.enrichment.summary if e.enrichment else None,
+            "pull_quotes": e.enrichment.pull_quotes if e.enrichment else [],
+        }
+        for e in entries if e.tier == "high_signal"
+    ]
+
+    payload = {
+        "date": date,
+        "digest_markdown": markdown,
+        "high_signal_count": stats.get("high_signal_count", 0),
+        "posts_scanned": stats.get("posts_scanned", 0),
+        "high_signal": high_signal,
+    }
+
+    try:
+        resp = requests.post(webhook_url, json=payload, timeout=15)
+        resp.raise_for_status()
+        logger.info(f"Zapier webhook sent successfully ({resp.status_code})")
+        return True
+    except Exception as e:
+        logger.warning(f"Zapier webhook failed (non-blocking): {e}")
+        return False

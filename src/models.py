@@ -56,9 +56,8 @@ class ScoredPost(BaseModel):
 class EnrichmentResult(BaseModel):
     """Output from Stage 2 enrichment (Sonnet/Pro)."""
 
-    best_quote: str
-    quote_context: str = ""
-    angles: list[dict[str, str]] = Field(default_factory=list)
+    summary: str = ""  # 2-3 sentence summary of the article
+    pull_quotes: list[str] = Field(default_factory=list)  # 1-3 quotable passages
 
 
 class EnrichedPost(BaseModel):

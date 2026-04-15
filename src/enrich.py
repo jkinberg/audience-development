@@ -27,49 +27,28 @@ def _get_client() -> genai.Client:
     return _client
 
 
-EDITORIAL_CONTEXT = """Josh Kinberg is a product leader with 15+ years of experience at NBC News Group,
-building audience products at the intersection of media, technology, and AI. He writes about
-product leadership, AI-assisted workflows, media industry dynamics, and the craft of building
-with AI. His Substack covers: civic data journalism with AI tools, product org design,
-human-AI collaboration, leadership under uncertainty, and behind-the-curtain build logs.
-
-His reshare commentary should reflect: real experience (not theory), a product leader's lens
-on media/AI topics, willingness to share contrarian takes, and genuine engagement with the
-creator community rather than self-promotion."""
-
-
 def _build_enrichment_prompt(post: ScoredPost, full_text: str) -> str:
     """Build the Stage 2 enrichment prompt."""
     themes = ", ".join(post.score.theme_clusters) or "general"
 
-    return f"""You are helping a Substack creator identify the best quotable moment and reshare angles for a post they want to reshare with commentary on Substack Notes.
+    return f"""Summarize this article and extract pull quotes that would work well in a Substack reshare.
 
-CREATOR CONTEXT:
-{EDITORIAL_CONTEXT}
-
-POST DETAILS:
+ARTICLE:
 Title: {post.post.title}
 Author: {post.post.author_name} ({post.post.publication_name})
-Matched themes: {themes}
-Score reason: {post.score.one_line_reason}
+Topics: {themes}
 
-FULL POST TEXT:
+FULL TEXT:
 {full_text[:8000]}
 
 INSTRUCTIONS:
-1. Extract the single best quotable moment (1-3 sentences) that would work well in a reshare. The quote should be specific, insightful, and invite commentary — not a generic summary.
-2. Explain briefly why this quote works for a reshare.
-3. Suggest exactly 3 reshare angles — specific ways Josh could add value with his commentary. Each angle should connect to his experience or perspective, not just summarize the post. Vary the types: personal experience, contrarian take, community question, connection to another trend, etc.
+1. Write a brief summary (2-3 sentences) of what this article is about and what makes it interesting. Be specific — mention the key argument, finding, or insight. Write in plain, direct language.
+2. Extract 1-3 pull quotes — actual passages from the article that are quotable, specific, and would stand on their own in a reshare. Each quote should be 1-3 sentences, copied verbatim from the text.
 
 Respond with ONLY a JSON object (no markdown, no explanation):
 {{
-  "best_quote": "<the actual quoted text from the post — 1-3 sentences>",
-  "quote_context": "<why this quote works for a reshare — 1 sentence>",
-  "angles": [
-    {{"angle": "<specific reshare angle>", "type": "<personal experience|contrarian take|community question|trend connection|build on this>"}},
-    {{"angle": "<specific reshare angle>", "type": "<type>"}},
-    {{"angle": "<specific reshare angle>", "type": "<type>"}}
-  ]
+  "summary": "<2-3 sentence summary>",
+  "pull_quotes": ["<quote 1>", "<quote 2>", "<quote 3>"]
 }}"""
 
 
