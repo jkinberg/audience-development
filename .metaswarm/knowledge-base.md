@@ -68,6 +68,18 @@
 - Env vars: `GMAIL_ADDRESS`, `GMAIL_APP_PASSWORD` in .env
 - Claude Cowork sandbox couldn't run the pipeline (404 errors with Substack API) — local or cloud deployment required
 
+## Feedback Monitor (2026-04-15)
+- feedback.py built and tested. Matches Notes reshares against digest post IDs.
+- Notes API: `GET {publication_url}/api/v1/notes` → returns `{items: [...]}` with comment body + attachments
+- Reshares appear as Notes with `attachments[].type == "post"` containing full post metadata including `id`
+- Post ID from attachment matches directly against `digest_history.json` post IDs — clean 1:1 matching
+- Also captures: commentary text (comment.body), timestamp, note_id, author/publication of reshared post
+- Notes without post attachments (original Notes, image posts) are skipped
+- Notes resharing content NOT from the digest are logged with `matched: false` — still useful signal
+- Dedup via `seen_note_ids` list in reshare_log.json — won't re-process on subsequent runs
+- First run found 2 digest matches + 10 historical Notes (own article promos + pre-pipeline reshare)
+- Runs automatically as last step of pipeline after digest delivery
+
 ## Design Decisions (from brainstorm + review, 2026-04-03)
 - Two-stage scoring: Gemini 3.1 Flash (metadata, classification) → Sonnet/Gemini 3.1 Pro (full content, creative)
 - Stage 1 threshold: score ≥ 7 = HIGH SIGNAL (gets enrichment), score 6 = WORTH A LOOK (no enrichment)
