@@ -53,7 +53,7 @@
 - Title links are H2 headings with numbered entries, link is the first thing you see
 - "Also noted" section for score-6 posts continues numbering from high signal
 - Zapier webhook removed from config — delivery via local markdown file for now
-- Run command: `PYTHONPATH=. python3 scripts/run_pipeline.py` (needs PYTHONPATH hack, should fix)
+- Run command: `./run.sh` (shell script handles venv activation and PYTHONPATH)
 - Pipeline runtime ~3.5 min for 44 pubs, 18 posts scored, 7 enriched
 
 ## Design Decisions (from brainstorm + review, 2026-04-03)

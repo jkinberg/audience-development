@@ -49,8 +49,7 @@ python -c "from src.fetch import load_watchlist, fetch_all_posts; ..."  # test f
 
 ## Running the Pipeline
 ```bash
-source .venv/bin/activate
-PYTHONPATH=. python3 scripts/run_pipeline.py   # full daily run
+./run.sh                                       # full daily run (recommended)
 ```
 Output: `output/digests/YYYY-MM-DD.md`
 
