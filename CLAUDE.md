@@ -44,7 +44,15 @@ python -c "from src.fetch import load_watchlist, fetch_all_posts; ..."  # test f
 - **Day 0:** Complete — API validated, findings documented
 - **Day 1:** Complete — fetch, discover, watchlist expanded to 44 publications, Notes API validated (not available)
 - **Day 2:** Complete — score.py (Gemini 3.1 Flash Lite) + enrich.py (Gemini 3.1 Pro) built and tested. 47 posts scored, 5 enriched, zero failures.
-- **Day 3:** Not started — digest.py + run_pipeline.py orchestration. First real digest.
+- **Day 3:** Complete — digest.py + run_pipeline.py built. First real digest: 17 posts scanned, 7 HIGH SIGNAL enriched, zero failures. ~3.5 min runtime.
+- **Next:** Days 4-5 polish + deploy (error handling, cloud cron, dedup across runs)
+
+## Running the Pipeline
+```bash
+source .venv/bin/activate
+PYTHONPATH=. python3 scripts/run_pipeline.py   # full daily run
+```
+Output: `output/digests/YYYY-MM-DD.md`
 
 ## Dependencies
 Managed via pip in `.venv/` and `requirements.txt`. Key packages: substack_api, google-genai, anthropic, pydantic, beautifulsoup4, html2text, tenacity, python-dotenv.
