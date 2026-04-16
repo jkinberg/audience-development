@@ -80,6 +80,15 @@
 - First run found 2 digest matches + 10 historical Notes (own article promos + pre-pipeline reshare)
 - Runs automatically as last step of pipeline after digest delivery
 
+## Cloud Deployment (2026-04-15)
+- **GitHub Actions: BLOCKED.** All `*.substack.com` API calls return 403 from GitHub Actions runners. User-Agent and delay changes didn't help — it's an IP-level block. Custom domain publications (e.g., `newsletter.eng-leadership.com`, `refactoring.fm`) worked fine from GH Actions.
+- **Google Cloud Run: WORKS.** Tested with a Cloud Run Job in us-east1 — `eshap.substack.com` returned 200 successfully. Substack does not block Google Cloud IPs.
+- Deployment target: Google Cloud Run Jobs with Cloud Scheduler for daily cron
+- Need a new GCP project (not reusing nyc-school-explorer)
+- State persistence: Cloud Storage bucket for digest_history.json and reshare_log.json
+- Secrets: GCP Secret Manager for API keys and Gmail credentials
+- GitHub Actions workflow removed from repo
+
 ## Design Decisions (from brainstorm + review, 2026-04-03)
 - Two-stage scoring: Gemini 3.1 Flash (metadata, classification) → Sonnet/Gemini 3.1 Pro (full content, creative)
 - Stage 1 threshold: score ≥ 7 = HIGH SIGNAL (gets enrichment), score 6 = WORTH A LOOK (no enrichment)
