@@ -88,6 +88,13 @@
 - State persistence: Cloud Storage bucket for digest_history.json and reshare_log.json
 - Secrets: GCP Secret Manager for API keys and Gmail credentials
 - GitHub Actions workflow removed from repo
+- **Deployed to Cloud Run:** Project `audience-development-agents`, region us-east1
+- Container: `gcr.io/audience-development-agents/signal-pipeline`
+- State bucket: `gs://audience-development-agents-state` (digest_history.json, reshare_log.json)
+- Scheduler: `signal-pipeline-daily` — cron `0 13 * * *` (9 AM ET)
+- First cloud run: 22 posts scanned, 8 HIGH SIGNAL, 0 fetch errors, email delivered
+- To redeploy after code changes: `gcloud config set project audience-development-agents && gcloud builds submit --tag gcr.io/audience-development-agents/signal-pipeline && gcloud run jobs update signal-pipeline --image gcr.io/audience-development-agents/signal-pipeline --region us-east1`
+- To manually trigger: `gcloud run jobs execute signal-pipeline --region us-east1`
 
 ## Design Decisions (from brainstorm + review, 2026-04-03)
 - Two-stage scoring: Gemini 3.1 Flash (metadata, classification) → Sonnet/Gemini 3.1 Pro (full content, creative)

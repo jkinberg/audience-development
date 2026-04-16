@@ -49,9 +49,22 @@ python -c "from src.fetch import load_watchlist, fetch_all_posts; ..."  # test f
 
 ## Running the Pipeline
 ```bash
-./run.sh                                       # full daily run (recommended)
+./run.sh                                       # local run
+gcloud run jobs execute signal-pipeline --region us-east1  # cloud run (manual trigger)
 ```
-Output: `output/digests/YYYY-MM-DD.md`
+Output: `output/digests/YYYY-MM-DD.md` (local) or email delivery (cloud)
+
+## Cloud Deployment
+- **GCP Project:** `audience-development-agents`
+- **Cloud Run Job:** `signal-pipeline` in us-east1
+- **Cloud Scheduler:** `signal-pipeline-daily` — 9:00 AM ET daily (13:00 UTC)
+- **State:** `gs://audience-development-agents-state` (digest_history.json, reshare_log.json)
+- **Redeploy after code changes:**
+  ```bash
+  gcloud config set project audience-development-agents
+  gcloud builds submit --tag gcr.io/audience-development-agents/signal-pipeline
+  gcloud run jobs update signal-pipeline --image gcr.io/audience-development-agents/signal-pipeline --region us-east1
+  ```
 
 ## Dependencies
 Managed via pip in `.venv/` and `requirements.txt`. Key packages: substack_api, google-genai, anthropic, pydantic, beautifulsoup4, html2text, tenacity, python-dotenv.
