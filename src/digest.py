@@ -121,8 +121,6 @@ def render_markdown(
     lines.append(f"- Posts scoring 6 (WORTH A LOOK): {stats.get('worth_a_look_count', 0)}")
     if stats.get("fetch_errors", 0) > 0:
         lines.append(f"- Fetch errors: {stats['fetch_errors']}")
-        for err in stats.get("error_details", []):
-            lines.append(f"  - {err.get('publication', '?')}: {err.get('error', '?')}")
     if stats.get("scoring_failures", 0) > 0:
         lines.append(f"- Scoring failures: {stats['scoring_failures']}")
     if stats.get("enrichment_failures", 0) > 0:

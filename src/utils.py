@@ -12,7 +12,10 @@ logger = logging.getLogger("pipeline")
 
 # Reusable session with connection pooling
 _session = requests.Session()
-_session.headers.update({"User-Agent": "audience-development-pipeline/0.1"})
+_session.headers.update({
+    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+    "Accept": "application/json",
+})
 
 
 def setup_logging(level: str = "INFO") -> None:
@@ -104,5 +107,7 @@ def is_within_window(post_date_str: str, lookback_days: int) -> bool:
 
 
 def polite_delay(seconds: float) -> None:
-    """Sleep between API calls to be respectful of rate limits."""
-    time.sleep(seconds)
+    """Sleep between API calls with slight randomization."""
+    import random
+    jitter = seconds * random.uniform(0.5, 1.5)
+    time.sleep(jitter)
