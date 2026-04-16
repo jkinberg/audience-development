@@ -96,6 +96,30 @@
 - To redeploy after code changes: `gcloud config set project audience-development-agents && gcloud builds submit --tag gcr.io/audience-development-agents/signal-pipeline && gcloud run jobs update signal-pipeline --image gcr.io/audience-development-agents/signal-pipeline --region us-east1`
 - To manually trigger: `gcloud run jobs execute signal-pipeline --region us-east1`
 
+## Gotchas & Patterns (consolidated from build sessions)
+
+### Gotchas — will bite you if you forget
+- **Substack blocks GitHub Actions IPs.** All `*.substack.com` 403. Custom domains work. Google Cloud Run works. It's IP-level, not User-Agent.
+- **`substack_api` library redirect bugs.** Cross-posted content and `p-{id}` canonical URLs cause 404 in `Post.get_metadata()`. Always use raw archive API + slug-based fetch.
+- **`get_recommendations()` returns URLs without `https://`.** Must normalize before API calls.
+- **Gemini model IDs change frequently.** `gemini-2.0-flash` deprecated (404). Always list available models before assuming an ID works: `client.models.list()`.
+- **Custom domain Substack URLs don't open in the app.** Rewrite to `*.substack.com` using subdomain from `publishedBylines` data in archive response.
+- **Ben's Bites (`www.bensbites.com`) byline data lacks subdomain** — URL rewriting doesn't work for all custom domains.
+
+### Patterns — do this, it works
+- **Day 0 validation before building.** Test API assumptions, rate limits, library bugs before committing to a build path.
+- **Don't over-engineer delivery.** Start with simplest working option. Zapier → spam. Gmail SMTP → inbox.
+- **Digest = scanning tool, not commentary tool.** Surface content with links, summaries, quotes. Don't suggest what to say.
+- **Watchlist = publications, not authors.** Some authors guest-contribute elsewhere.
+- **Two-pass scoring.** Metadata-only Stage 1 (cheap, all posts) → full content Stage 2 (expensive, top posts only).
+- **Substack niche is sparse.** Expect ~50% of watchlist authors to be inactive. Discovery engine is essential.
+
+### API Behaviors — undocumented but confirmed
+- `{publication_url}/api/v1/notes` returns user's Notes feed (body, timestamps, post attachments). No auth.
+- `/api/v1/archive` returns all scoring metadata inline (title, subtitle, description, truncated_body_text, engagement, bylines). No `body_html`.
+- `/api/v1/posts/{slug}` returns full `body_html`. More reliable than library's ID-based fetch.
+- Notes reshares have `attachments[].type == "post"` with full post metadata including `id` for matching.
+
 ## Design Decisions (from brainstorm + review, 2026-04-03)
 - Two-stage scoring: Gemini 3.1 Flash (metadata, classification) → Sonnet/Gemini 3.1 Pro (full content, creative)
 - Stage 1 threshold: score ≥ 7 = HIGH SIGNAL (gets enrichment), score 6 = WORTH A LOOK (no enrichment)
