@@ -96,6 +96,17 @@
 - To redeploy after code changes: `gcloud config set project audience-development-agents && gcloud builds submit --tag gcr.io/audience-development-agents/signal-pipeline && gcloud run jobs update signal-pipeline --image gcr.io/audience-development-agents/signal-pipeline --region us-east1`
 - To manually trigger: `gcloud run jobs execute signal-pipeline --region us-east1`
 
+## Public Release + Subscription Sync (2026-04-29)
+- Repo flipped from private to public on GitHub (`jkinberg/audience-development`)
+- Personal corpus, analytics, runtime data, and digest history moved out to sibling dir `~/Projects/audience-development-private/`
+- History rewritten with `git-filter-repo` to scrub `corpus/`, `data/*.json`, and `output/digests/*.md` from all commits — repo `.git` shrank ~80M → ~270K
+- Personal config (substack handle/url, delivery email) parameterized to env vars in `.env`; `pipeline.json` uses `null` and the consumers fall back to `os.getenv(...)`
+- `src/subscriptions.py` added: `User.get_subscriptions()` → diff against watchlist → append new pubs with `source: "subscription"`. Resolves custom-domain pubs (e.g. `blog.brianbalfour.com` → `brianbalfour.substack.com`) via archive lookup so duplicates are caught. First run: 35 subs → 18 new pubs added (44 → 62 watchlist entries)
+- `src/feedback.py` extended with `flag_publications_from_unmatched()`: writes off-digest reshare publications to `data/reshare_candidates.json`. Dedupes by URL host, publication name, and author. Skips self-reshares and bare-substack.com URLs that can't identify a publication
+- `scripts/review_candidates.py` + Monday gate in `cloud_run.py`: weekly review opens a GitHub issue listing pubs with ≥2 reshares (promote) and 1-reshare pubs older than 4 weeks (prune candidates). Uses `GITHUB_TOKEN` env var on Cloud Run; falls back to logging the would-be issue if the token is unset
+- `STATE_FILES` in `cloud_run.py` now includes `config/watchlist.json` and `data/reshare_candidates.json` so subscription-sync mutations and reshare candidates persist across image deploys
+- Backup of pre-rewrite repo at `~/Projects/audience-development-backup-pre-public/` (preserved original 80M history before force-push)
+
 ## Gotchas & Patterns (consolidated from build sessions)
 
 ### Gotchas — will bite you if you forget
@@ -105,6 +116,9 @@
 - **Gemini model IDs change frequently.** `gemini-2.0-flash` deprecated (404). Always list available models before assuming an ID works: `client.models.list()`.
 - **Custom domain Substack URLs don't open in the app.** Rewrite to `*.substack.com` using subdomain from `publishedBylines` data in archive response.
 - **Ben's Bites (`www.bensbites.com`) byline data lacks subdomain** — URL rewriting doesn't work for all custom domains.
+- **`resolve_handle_redirect()` only handles handle renames, NOT custom-domain → subdomain.** Returns `None` for both `blog.brianbalfour.com` and `brianbalfour.substack.com`. To canonicalize a custom-domain pub to `*.substack.com`, fetch one archive post via `Newsletter(url).get_posts(limit=1)` and read `publishedBylines[0].publicationUsers[0].publication.subdomain`.
+- **Notes reshares can have bare-substack.com `canonical_url`.** Some reshares use `https://substack.com/home/post/p-XXX` with no publication subdomain — the URL alone can't identify the publication. When deduping reshares against a watchlist, also match by publication name and author, not just URL host.
+- **`/schedule` (RemoteTrigger) sandbox has no gcloud or gh CLI auth.** Only auth available is via MCP connectors (currently Drive/Gmail/Calendar). Tasks needing GCP or GitHub access must either use a connector path or run inside an already-authenticated environment (e.g., Cloud Run itself). Don't propose remote scheduled agents for GCS+gh tasks without restructuring auth.
 
 ### Patterns — do this, it works
 - **Day 0 validation before building.** Test API assumptions, rate limits, library bugs before committing to a build path.
@@ -113,12 +127,15 @@
 - **Watchlist = publications, not authors.** Some authors guest-contribute elsewhere.
 - **Two-pass scoring.** Metadata-only Stage 1 (cheap, all posts) → full content Stage 2 (expensive, top posts only).
 - **Substack niche is sparse.** Expect ~50% of watchlist authors to be inactive. Discovery engine is essential.
+- **Cloud Run state-file round-trip rule.** Any file mutated by code at runtime (e.g., `config/watchlist.json` after subscription sync, `data/reshare_candidates.json` from feedback) must be in `STATE_FILES` in `cloud_run.py` so it round-trips with GCS. Otherwise the mutation is lost on the next image deploy. Don't bake mutable state into the container image.
+- **Subscription sync runs BEFORE fetch in `run_pipeline.py`.** New pubs from `User.get_subscriptions()` are picked up on the same run rather than waiting a day. Stage order in `scripts/run_pipeline.py` is intentional: subscription sync → fetch → score → enrich → digest → deliver → feedback.
 
 ### API Behaviors — undocumented but confirmed
 - `{publication_url}/api/v1/notes` returns user's Notes feed (body, timestamps, post attachments). No auth.
 - `/api/v1/archive` returns all scoring metadata inline (title, subtitle, description, truncated_body_text, engagement, bylines). No `body_html`.
 - `/api/v1/posts/{slug}` returns full `body_html`. More reliable than library's ID-based fetch.
 - Notes reshares have `attachments[].type == "post"` with full post metadata including `id` for matching.
+- `substack_api.User(handle).get_subscriptions()` returns the user's **public** Substack subscriptions without auth — `[{publication_id, publication_name, domain, membership_state}]`. Used by `src/subscriptions.py` to sync the user's follows into the watchlist. Private/paid subs may not appear; only what shows on the public profile.
 
 ## Design Decisions (from brainstorm + review, 2026-04-03)
 - Two-stage scoring: Gemini 3.1 Flash (metadata, classification) → Sonnet/Gemini 3.1 Pro (full content, creative)
