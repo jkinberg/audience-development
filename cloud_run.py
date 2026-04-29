@@ -2,6 +2,7 @@
 
 import os
 import logging
+from datetime import datetime, timezone
 from pathlib import Path
 
 from google.cloud import storage
@@ -71,6 +72,16 @@ def main():
     # Upload state back to GCS
     logger.info("=== Uploading state to GCS ===")
     upload_state()
+
+    # Weekly candidate review (Mondays only). Posts a GitHub issue if there are
+    # candidates worth surfacing. Non-blocking — pipeline success doesn't depend on it.
+    if datetime.now(timezone.utc).weekday() == 0:  # Monday = 0
+        logger.info("=== Monday: running weekly candidate review ===")
+        try:
+            from scripts.review_candidates import main as review_candidates
+            review_candidates()
+        except Exception as e:
+            logger.warning(f"Candidate review failed (non-blocking): {e}")
 
     logger.info("=== Cloud Run job complete ===")
 
