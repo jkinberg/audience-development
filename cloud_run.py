@@ -18,6 +18,8 @@ BUCKET_NAME = os.getenv("GCS_BUCKET", "audience-development-agents-state")
 STATE_FILES = [
     "data/digest_history.json",
     "data/reshare_log.json",
+    "data/reshare_candidates.json",
+    "config/watchlist.json",
 ]
 
 
