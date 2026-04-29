@@ -2,8 +2,11 @@
 
 import json
 import logging
+import os
+import re
 from datetime import datetime, timezone
 from pathlib import Path
+from urllib.parse import urlparse
 
 import requests
 
@@ -92,10 +95,115 @@ def save_reshare_log(log: dict, path: str = "data/reshare_log.json") -> None:
         json.dump(log, f, indent=2, default=str)
 
 
+def _publication_url_from_canonical(canonical_url: str) -> str | None:
+    """Extract a publication's base URL (scheme + host) from a post's canonical URL."""
+    if not canonical_url:
+        return None
+    try:
+        parsed = urlparse(canonical_url)
+        if not parsed.scheme or not parsed.netloc:
+            return None
+        return f"{parsed.scheme}://{parsed.netloc}".lower()
+    except Exception:
+        return None
+
+
+def flag_publications_from_unmatched(
+    reshares: list[dict],
+    user_substack_url: str | None,
+    watchlist_path: str = "config/watchlist.json",
+    candidates_path: str = "data/reshare_candidates.json",
+) -> list[dict]:
+    """Flag publications from unmatched reshares that aren't in the watchlist.
+
+    Skips the user's own publication (self-reshares). Skips pubs already in
+    the watchlist. Appends new candidates to candidates_path with a count of
+    how many times each pub has been reshared.
+
+    Returns the list of newly flagged publications (newly added candidates only).
+    """
+    user_host = _publication_url_from_canonical(user_substack_url) if user_substack_url else None
+
+    try:
+        with open(watchlist_path) as f:
+            wl = json.load(f).get("publications", [])
+    except (FileNotFoundError, json.JSONDecodeError):
+        wl = []
+    wl_hosts = {_publication_url_from_canonical(p.get("url", "")) for p in wl}
+    wl_hosts.discard(None)
+    wl_names = {p.get("name", "").lower().strip() for p in wl if p.get("name")}
+    wl_authors = {p.get("author", "").lower().strip() for p in wl if p.get("author")}
+
+    try:
+        with open(candidates_path) as f:
+            data = json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        data = {"candidates": []}
+
+    by_url: dict[str, dict] = {c["url"]: c for c in data.get("candidates", [])}
+    newly_flagged: list[dict] = []
+
+    for r in reshares:
+        if r.get("matched"):
+            continue
+        pub_url = _publication_url_from_canonical(r.get("canonical_url", ""))
+        if not pub_url:
+            continue
+
+        # Generic substack.com URLs (e.g. /home/post/p-XXX) don't identify a
+        # specific publication — fall back to name/author matching.
+        is_generic = pub_url in ("https://substack.com", "https://www.substack.com")
+
+        if user_host and pub_url == user_host:
+            continue
+        if not is_generic and pub_url in wl_hosts:
+            continue
+
+        # Dedup against watchlist by publication name or author when URL is generic
+        # or when the same pub is listed under a different URL form.
+        pub_name = (r.get("publication") or "").lower().strip()
+        author = (r.get("author") or "").lower().strip()
+        if pub_name and pub_name in wl_names:
+            continue
+        if author and author in wl_authors:
+            continue
+        if is_generic:
+            # Skip generic substack.com URLs — can't store as a useful candidate
+            continue
+
+        if pub_url in by_url:
+            entry = by_url[pub_url]
+            entry["reshare_count"] = entry.get("reshare_count", 0) + 1
+            entry["last_reshared"] = r.get("note_timestamp", "")
+        else:
+            entry = {
+                "url": pub_url,
+                "name": r.get("publication", ""),
+                "author": r.get("author", ""),
+                "source": "reshare",
+                "reshare_count": 1,
+                "first_reshared": r.get("note_timestamp", ""),
+                "last_reshared": r.get("note_timestamp", ""),
+                "example_post": r.get("title", ""),
+            }
+            by_url[pub_url] = entry
+            newly_flagged.append(entry)
+            logger.info(f"Flagged candidate from reshare: {entry['name']} ({pub_url})")
+
+    data["candidates"] = list(by_url.values())
+    Path(candidates_path).parent.mkdir(parents=True, exist_ok=True)
+    with open(candidates_path, "w") as f:
+        json.dump(data, f, indent=2)
+
+    return newly_flagged
+
+
 def check_for_reshares(
     substack_url: str,
     digest_history_path: str = "data/digest_history.json",
     reshare_log_path: str = "data/reshare_log.json",
+    watchlist_path: str = "config/watchlist.json",
+    candidates_path: str = "data/reshare_candidates.json",
 ) -> list[dict]:
     """Check Notes for reshares that match digest suggestions.
 
@@ -159,5 +267,14 @@ def check_for_reshares(
         f"{len(unmatched)} other reshares, "
         f"{len(notes)} total notes scanned"
     )
+
+    # Flag unmatched-reshare publications as watchlist candidates.
+    if unmatched:
+        flag_publications_from_unmatched(
+            unmatched,
+            user_substack_url=substack_url,
+            watchlist_path=watchlist_path,
+            candidates_path=candidates_path,
+        )
 
     return new_reshares

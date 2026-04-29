@@ -59,7 +59,7 @@ def send_digest_email(
         logger.warning("Gmail credentials not set — skipping email delivery")
         return False
 
-    to_email = config.get("to_email", gmail_address)
+    to_email = config.get("to_email") or os.getenv("USER_EMAIL") or gmail_address
     high_signal_count = stats.get("high_signal_count", 0)
 
     subject_template = config.get(

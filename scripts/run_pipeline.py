@@ -2,9 +2,14 @@
 
 import json
 import logging
+import os
 import sys
 from datetime import datetime
 from pathlib import Path
+
+from dotenv import load_dotenv
+
+load_dotenv()
 
 from src.fetch import load_watchlist, load_digest_history, fetch_all_posts, save_fetched_posts
 from src.score import score_all_posts, load_signal_profile, load_pipeline_config, save_scored_posts
@@ -12,6 +17,7 @@ from src.enrich import enrich_top_posts
 from src.digest import build_digest_entries, render_markdown, write_digest, update_digest_history, send_to_zapier
 from src.deliver import send_digest_email
 from src.feedback import check_for_reshares
+from src.subscriptions import sync_subscriptions_to_watchlist
 from src.utils import setup_logging
 
 
@@ -28,6 +34,15 @@ def main():
     # Load config
     config = load_pipeline_config()
     signal_profile = load_signal_profile()
+
+    # --- STAGE 0: SUBSCRIPTION SYNC ---
+    # Pull the user's current Substack subs and append any new pubs to the watchlist
+    # before fetching, so the run picks them up immediately.
+    sub_handle = config.get("user", {}).get("substack_handle") or os.getenv("SUBSTACK_HANDLE")
+    if sub_handle:
+        logger.info("--- SUBSCRIPTION SYNC ---")
+        sync_subscriptions_to_watchlist(handle=sub_handle)
+
     watchlist = load_watchlist()
     seen_ids = load_digest_history()
     scoring_config = signal_profile.get("scoring", {})
@@ -143,10 +158,12 @@ def main():
     # Check for reshares from previous digests (feedback loop)
     feedback_config = config.get("feedback", {})
     if feedback_config.get("enabled", True):
-        substack_url = config.get("user", {}).get("substack_url", "")
+        substack_url = config.get("user", {}).get("substack_url") or os.getenv("SUBSTACK_URL")
         if substack_url:
             logger.info("--- FEEDBACK ---")
             reshares = check_for_reshares(substack_url)
+        else:
+            logger.warning("No SUBSTACK_URL configured — skipping feedback check")
 
     # Summary
     logger.info(f"=== Pipeline complete ===")

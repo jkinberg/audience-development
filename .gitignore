@@ -15,15 +15,15 @@ credentials.json
 # macOS
 .DS_Store
 
-# Data exports (large files, regenerable)
-corpus/linkedin/dataset_linkedin-profile-reactions_*.json
-corpus/linkedin/linkedin-posts-export-*/
-corpus/substack/substack-reactions-html-export
+# Personal corpus and analytics (kept private)
+corpus/
 
 # IDE
 .vscode/
 .idea/
 
-# Pipeline output (runs are ephemeral, digests are kept for history)
-output/digests/*.json
+# Pipeline runtime data (personal — kept private)
+data/*.json
 data/runs/
+output/digests/*.md
+output/digests/*.json

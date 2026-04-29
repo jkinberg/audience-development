@@ -1,7 +1,7 @@
 {
   "user": {
-    "substack_handle": "joshkinberg",
-    "substack_url": "https://joshkinberg.substack.com"
+    "substack_handle": null,
+    "substack_url": null
   },
   "fetch": {
     "lookback_days": 1,
@@ -21,7 +21,7 @@
   },
   "delivery": {
     "enabled": true,
-    "to_email": "jkinberg@gmail.com",
+    "to_email": null,
     "subject_template": "Substack Signal Pipeline — {date} — {high_signal_count} high signal",
     "skip_empty": true
   },
