@@ -46,11 +46,21 @@ def fetch_archive(
     """
     base = publication_url.rstrip("/")
     url = f"{base}/api/v1/archive"
-    params = {"sort": "new", "offset": 0, "limit": limit}
+    # NOTE: Around 2026-11-06 Substack changed the archive API. Two changes:
+    #   1. The `offset` param is now rejected with a 400 ("Invalid value") —
+    #      they moved to cursor-based pagination. We only ever fetch the first
+    #      page, so offset is unnecessary; omit it.
+    #   2. The response is now a dict {"posts": [...], "nextCursor": ...}
+    #      instead of a bare JSON array. Unwrap it to preserve this function's
+    #      list-of-posts contract.
+    params = {"sort": "new", "limit": limit}
 
     resp = _session.get(url, params=params, timeout=timeout)
     resp.raise_for_status()
-    return resp.json()
+    data = resp.json()
+    if isinstance(data, dict):
+        return data.get("posts", [])
+    return data
 
 
 @retry(
