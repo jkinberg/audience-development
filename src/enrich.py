@@ -77,7 +77,7 @@ def _parse_enrichment_response(response_text: str) -> EnrichmentResult | None:
 
 def enrich_post(
     scored_post: ScoredPost,
-    model: str = "gemini-3.1-pro-preview",
+    model: str = "gemini-3.8-flash",
 ) -> EnrichedPost | None:
     """Enrich a single high-scoring post with quotes and angles.
 
@@ -136,7 +136,7 @@ def enrich_top_posts(
         from src.score import load_pipeline_config
         config = load_pipeline_config()
 
-    model = config.get("scoring", {}).get("stage2_model", "gemini-3.1-pro-preview")
+    model = config.get("scoring", {}).get("stage2_model", "gemini-3.8-flash")
     high_signal = [sp for sp in scored_posts if sp.score.total_score >= threshold]
 
     logger.info(f"Enriching {len(high_signal)} posts scoring >= {threshold}")

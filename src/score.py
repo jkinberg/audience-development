@@ -133,7 +133,7 @@ def _parse_score_response(response_text: str) -> Stage1Score | None:
         return None
 
 
-def score_post(post: Post, signal_profile: dict, model: str = "gemini-3.1-flash-lite-preview", temperature: float = 0) -> Stage1Score | None:
+def score_post(post: Post, signal_profile: dict, model: str = "gemini-3.5-flash-lite", temperature: float = 0) -> Stage1Score | None:
     """Score a single post using Gemini Flash. Returns None on failure."""
     client = _get_client()
     prompt = _build_scoring_prompt(post, signal_profile)
@@ -169,7 +169,7 @@ def score_all_posts(
     if config is None:
         config = load_pipeline_config()
 
-    model = config.get("scoring", {}).get("stage1_model", "gemini-2.5-flash")
+    model = config.get("scoring", {}).get("stage1_model", "gemini-3.5-flash-lite")
     temperature = config.get("scoring", {}).get("stage1_temperature", 0)
 
     scored: list[ScoredPost] = []
