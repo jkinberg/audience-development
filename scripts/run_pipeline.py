@@ -72,6 +72,17 @@ def main():
     )
     save_fetched_posts(posts, run_dir)
 
+    # Guard: if EVERY publication failed to fetch, this is an outage (e.g. a
+    # Substack API change), not a quiet news day. Exit non-zero so the Cloud
+    # Run execution is marked FAILED and surfaces instead of silently
+    # "succeeding" with an empty digest and no email.
+    if watchlist and len(fetch_errors) == len(watchlist):
+        logger.critical(
+            f"ALL {len(watchlist)} publications failed to fetch — aborting. "
+            f"First error: {fetch_errors[0]['error'] if fetch_errors else 'unknown'}"
+        )
+        sys.exit(1)
+
     if not posts:
         logger.info("No new posts found. Writing empty digest.")
         stats = {
