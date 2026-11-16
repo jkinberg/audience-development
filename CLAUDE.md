@@ -5,7 +5,7 @@ A content pipeline for Substack audience development. Monitors ~44 publications,
 
 ## Architecture
 - **Language:** Python 3.14
-- **Substack data:** Raw Substack API for daily fetches (`/api/v1/archive`, `/api/v1/posts/{slug}`). Library (`substack_api`) used only for discovery (`get_recommendations()`, `User`, `Category`). The archive endpoint returns `{"posts": [...], "nextCursor": ...}` and rejects an `offset` param — see `fetch_archive()` in `src/utils.py`.
+- **Substack data:** Raw Substack API for daily fetches (`/api/v1/archive`, `/api/v1/posts/{slug}`). Library (`substack_api`) used only for discovery (`get_recommendations()`, `User`, `Category`). The archive endpoint returns `{"posts": [...], "nextCursor": ...}` and rejects an `offset` param — see `fetch_archive()` in `src/utils.py`. Fetches retry HTTP 429 with `Retry-After`-aware backoff (exp. fallback, capped 30s, 4 attempts); inter-publication delay is 1.25s to avoid rate-limiting the full watchlist.
 - **Scoring (Stage 1):** Gemini 3.5 Flash Lite (`gemini-3.5-flash-lite`) — classifies posts from metadata only. Temp 0.
 - **Enrichment (Stage 2):** Gemini 3.8 Flash (`gemini-3.8-flash`) — full content fetch + quote extraction + angle suggestions. Only for posts scoring ≥ 7. Claude Sonnet 4.6 (`claude-sonnet-4-6`) configured as fallback (not yet wired into `enrich.py`).
 - **Model IDs:** Use **GA** Gemini names only — `-preview` IDs 404 on the `google-genai` SDK's default `v1` endpoint. SDK pinned to `>=1.70,<2.0`. Model strings live in `config/pipeline.json` **and** as hardcoded defaults in `score.py`/`enrich.py` — update both.
@@ -41,10 +41,11 @@ python scripts/day0_validation.py      # API validation
 python -c "from src.fetch import load_watchlist, fetch_all_posts; ..."  # test fetch
 ```
 
-## Build Status (as of 2026-11-15)
+## Build Status (as of 2026-11-16)
 - **Days 0–3:** Complete — fetch, discover (44 pubs), score.py, enrich.py, digest.py, run_pipeline.py built and tested. Notes API validated (not available).
-- **Deployed:** Running in production on Cloud Run, daily 9 AM ET, email delivery live.
+- **Deployed:** Running in production on Cloud Run, daily 13:00 UTC, email delivery live. Watchlist is now 69 publications (subscription-synced); the cloud job reads it from GCS, not git.
 - **Nov 2026 incident:** Daily emails stopped (last Nov 5) due to a chain of three issues — (1) Substack changed the archive API (dropped `offset`, reshaped response to `{posts, nextCursor}`); (2) Gemini prepaid credits depleted (402); (3) a rebuild pulled a newer `google-genai` SDK whose default endpoint (`v1`) 404s `-preview` model IDs. All resolved: archive fetch fixed + total-fetch-failure guard added; credits topped up; models moved to GA (`gemini-3.5-flash-lite`, `gemini-3.8-flash`, `claude-sonnet-4-6`) and SDK pinned. See **Troubleshooting** in README.md.
+- **Post-incident coverage fixes:** First clean scheduled run still dropped ~14/69 publications to HTTP 429 → added 429 backoff/retry + widened inter-pub delay (0.75→1.25s). One remaining dead publication (`Tech in LA`, lapsed custom domain `www.techinla.io` → NXDOMAIN) fixed by repointing its GCS watchlist URL to `techinla.substack.com`. Scheduled runs now fetch all 69 cleanly.
 - **Open follow-ups:** (1) the "all scoring failed" degraded path still exits 0 with no email — same silent-failure shape the fetch guard now covers; (2) `stage2_fallback_model` is configured but not wired into `enrich.py`.
 
 ## Running the Pipeline
