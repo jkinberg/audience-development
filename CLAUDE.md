@@ -5,9 +5,10 @@ A content pipeline for Substack audience development. Monitors ~44 publications,
 
 ## Architecture
 - **Language:** Python 3.14
-- **Substack data:** Raw Substack API for daily fetches (`/api/v1/archive`, `/api/v1/posts/{slug}`). Library (`substack_api`) used only for discovery (`get_recommendations()`, `User`, `Category`).
-- **Scoring (Stage 1):** Gemini 3.1 Flash Lite (`gemini-3.1-flash-lite-preview`) — classifies posts from metadata only. Temp 0.
-- **Enrichment (Stage 2):** Gemini 3.1 Pro (`gemini-3.1-pro-preview`) — full content fetch + quote extraction + angle suggestions. Only for posts scoring ≥ 7. Claude Sonnet (`claude-sonnet-4-20250514`) as fallback.
+- **Substack data:** Raw Substack API for daily fetches (`/api/v1/archive`, `/api/v1/posts/{slug}`). Library (`substack_api`) used only for discovery (`get_recommendations()`, `User`, `Category`). The archive endpoint returns `{"posts": [...], "nextCursor": ...}` and rejects an `offset` param — see `fetch_archive()` in `src/utils.py`.
+- **Scoring (Stage 1):** Gemini 3.5 Flash Lite (`gemini-3.5-flash-lite`) — classifies posts from metadata only. Temp 0.
+- **Enrichment (Stage 2):** Gemini 3.8 Flash (`gemini-3.8-flash`) — full content fetch + quote extraction + angle suggestions. Only for posts scoring ≥ 7. Claude Sonnet 4.6 (`claude-sonnet-4-6`) configured as fallback (not yet wired into `enrich.py`).
+- **Model IDs:** Use **GA** Gemini names only — `-preview` IDs 404 on the `google-genai` SDK's default `v1` endpoint. SDK pinned to `>=1.70,<2.0`. Model strings live in `config/pipeline.json` **and** as hardcoded defaults in `score.py`/`enrich.py` — update both.
 - **Config:** JSON files in `config/` — watchlist, signal_profile, pipeline settings
 - **Output:** Markdown digest in `output/digests/`. Zapier webhook is a future feature.
 - **Data models:** Pydantic models in `src/models.py` for typed data flow between stages
@@ -16,7 +17,7 @@ A content pipeline for Substack audience development. Monitors ~44 publications,
 ## Key Technical Decisions
 - Raw Substack archive API for daily batch pulls (library has bugs with cross-posts and redirects)
 - Slug-based content fetch (`/api/v1/posts/{slug}`) for full text — more reliable than library's ID-based fetch
-- Two-stage scoring: metadata-only Stage 1 (all posts via Gemini Flash), full content Stage 2 (posts ≥ 7 via Sonnet/Pro)
+- Two-stage scoring: metadata-only Stage 1 (all posts via Gemini Flash Lite), full content Stage 2 (posts ≥ 7 via Gemini Flash)
 - Substack Notes API is NOT publicly accessible — feedback.py deferred to Week 2 with manual fallback
 - Intermediate state files in `data/runs/YYYY-MM-DD/` for resumable pipeline runs
 
@@ -40,12 +41,11 @@ python scripts/day0_validation.py      # API validation
 python -c "from src.fetch import load_watchlist, fetch_all_posts; ..."  # test fetch
 ```
 
-## Build Status (as of 2026-04-14)
-- **Day 0:** Complete — API validated, findings documented
-- **Day 1:** Complete — fetch, discover, watchlist expanded to 44 publications, Notes API validated (not available)
-- **Day 2:** Complete — score.py (Gemini 3.1 Flash Lite) + enrich.py (Gemini 3.1 Pro) built and tested. 47 posts scored, 5 enriched, zero failures.
-- **Day 3:** Complete — digest.py + run_pipeline.py built. First real digest: 17 posts scanned, 7 HIGH SIGNAL enriched, zero failures. ~3.5 min runtime.
-- **Next:** Days 4-5 polish + deploy (error handling, cloud cron, dedup across runs)
+## Build Status (as of 2026-11-15)
+- **Days 0–3:** Complete — fetch, discover (44 pubs), score.py, enrich.py, digest.py, run_pipeline.py built and tested. Notes API validated (not available).
+- **Deployed:** Running in production on Cloud Run, daily 9 AM ET, email delivery live.
+- **Nov 2026 incident:** Daily emails stopped (last Nov 5) due to a chain of three issues — (1) Substack changed the archive API (dropped `offset`, reshaped response to `{posts, nextCursor}`); (2) Gemini prepaid credits depleted (402); (3) a rebuild pulled a newer `google-genai` SDK whose default endpoint (`v1`) 404s `-preview` model IDs. All resolved: archive fetch fixed + total-fetch-failure guard added; credits topped up; models moved to GA (`gemini-3.5-flash-lite`, `gemini-3.8-flash`, `claude-sonnet-4-6`) and SDK pinned. See **Troubleshooting** in README.md.
+- **Open follow-ups:** (1) the "all scoring failed" degraded path still exits 0 with no email — same silent-failure shape the fetch guard now covers; (2) `stage2_fallback_model` is configured but not wired into `enrich.py`.
 
 ## Running the Pipeline
 ```bash
