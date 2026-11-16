@@ -18,7 +18,7 @@ It also **closes the loop**: when you reshare a post on Substack Notes, it logs 
 ## Architecture
 
 ```
-Substack Archive API ──► Fetch ──► Score (Gemini Flash) ──► Enrich (Gemini Pro / Claude Sonnet) ──► Digest ──► Email
+Substack Archive API ──► Fetch ──► Score (Gemini Flash Lite) ──► Enrich (Gemini Flash / Claude Sonnet) ──► Digest ──► Email
                                                                                                        │
                                                                                                        └──► Substack Notes ──► Feedback Log
 ```
@@ -30,8 +30,9 @@ Substack Archive API ──► Fetch ──► Score (Gemini Flash) ──► En
 ## Stack
 
 - **Language:** Python 3.14
-- **Stage 1 scoring:** Gemini 3.1 Flash Lite (`gemini-3.1-flash-lite-preview`)
-- **Stage 2 enrichment:** Gemini 3.1 Pro (`gemini-3.1-pro-preview`), Claude Sonnet as fallback
+- **Stage 1 scoring:** Gemini 3.5 Flash Lite (`gemini-3.5-flash-lite`)
+- **Stage 2 enrichment:** Gemini 3.8 Flash (`gemini-3.8-flash`), Claude Sonnet 4.6 (`claude-sonnet-4-6`) as fallback
+- **Model IDs:** Use **GA** Gemini model names only — `-preview` IDs 404 on the `google-genai` SDK's default `v1` endpoint (the SDK is pinned to `>=1.70,<2.0` for this reason).
 - **Email delivery:** Gmail SMTP with App Password
 - **Deployment:** Local cron, GitHub Actions, or Google Cloud Run Jobs (deployment notes below)
 
@@ -121,6 +122,25 @@ gcloud run jobs create signal-pipeline --image gcr.io/<project>/signal-pipeline 
 ```
 
 **GitHub Actions** — works for some, but Substack appears to block traffic from GitHub Actions IP ranges. If your fetches return 403, switch to Cloud Run.
+
+## Troubleshooting
+
+The pipeline can finish "successfully" (Cloud Run shows ✔, exit 0) and still send no email — an empty or fetch-only digest doesn't error. If emails stop, check a recent run's logs for one of these three failure classes before anything else:
+
+| Symptom in logs | Cause | Fix |
+|---|---|---|
+| `FETCH … FAILED — 400 Bad Request` on every publication | Substack changed the archive API | Check `src/utils.py` `fetch_archive()` against the current `/api/v1/archive` request/response shape |
+| `402 RESOURCE_EXHAUSTED` during scoring/enrichment | Gemini prepaid credits depleted | Top up the key's balance at [AI Studio](https://ai.studio) |
+| `404 NOT_FOUND … is not found for API version v1` | A `-preview` Gemini model ID, or an unpinned `google-genai` SDK defaulting to the `v1` endpoint | Use **GA** model IDs only (no `-preview`); keep `google-genai` pinned to `>=1.70,<2.0` |
+
+A guard in `run_pipeline.py` exits non-zero when **all** publications fail to fetch, so a total fetch outage surfaces as a FAILED execution rather than a silent empty digest.
+
+Read logs with:
+
+```bash
+gcloud logging read 'resource.type="cloud_run_job" AND labels."run.googleapis.com/execution_name"="<execution-id>"' \
+  --project <project> --format 'value(timestamp, textPayload)' --order asc
+```
 
 ## Project structure
 
