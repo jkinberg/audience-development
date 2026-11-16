@@ -6,7 +6,7 @@
   "fetch": {
     "lookback_days": 1,
     "first_run_lookback_days": 3,
-    "delay_between_pubs_seconds": 0.75,
+    "delay_between_pubs_seconds": 1.25,
     "max_posts_per_pub": 10,
     "timeout_seconds": 15
   },
