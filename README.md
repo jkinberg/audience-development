@@ -135,6 +135,11 @@ The pipeline can finish "successfully" (Cloud Run shows ✔, exit 0) and still s
 
 A guard in `run_pipeline.py` exits non-zero when **all** publications fail to fetch, so a total fetch outage surfaces as a FAILED execution rather than a silent empty digest.
 
+**Per-publication fetch errors** (a subset of publications failing, not all) usually fall into two buckets:
+
+- `429 Too Many Requests` — Substack rate-limiting the full-watchlist loop. Handled automatically: `fetch_archive()` / `fetch_post_content()` retry with `Retry-After`-aware backoff, and `delay_between_pubs_seconds` (1.25s) spaces requests out. A burst of 429s surviving all retries means the delay needs widening further.
+- `NameResolutionError` / NXDOMAIN on one publication — a lapsed **custom domain**. The publication is usually still live on its `*.substack.com` subdomain; update that entry's `url` in the watchlist. For cloud runs the authoritative watchlist is in GCS (`gs://<project>-state/config/watchlist.json`), not git.
+
 Read logs with:
 
 ```bash
