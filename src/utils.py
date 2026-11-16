@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 
 import html2text
 import requests
-from tenacity import retry, stop_after_attempt, wait_fixed, retry_if_exception_type
+from tenacity import retry, stop_after_attempt, retry_if_exception_type, retry_if_exception
 
 logger = logging.getLogger("pipeline")
 
@@ -28,12 +28,46 @@ def setup_logging(level: str = "INFO") -> None:
 
 # --- Substack raw API helpers ---
 
+# Substack rate-limits the archive/post endpoints (HTTP 429), especially when
+# fetching the full watchlist in a tight loop. Retry those with backoff that
+# honors a Retry-After header so we stop silently dropping publications.
 
-@retry(
-    stop=stop_after_attempt(2),
-    wait=wait_fixed(2),
-    retry=retry_if_exception_type((requests.Timeout, requests.ConnectionError)),
+
+def _is_rate_limited(exc: BaseException) -> bool:
+    resp = getattr(exc, "response", None)
+    return (
+        isinstance(exc, requests.HTTPError)
+        and resp is not None
+        and resp.status_code == 429
+    )
+
+
+def _wait_substack_backoff(retry_state) -> float:
+    """Honor a numeric Retry-After header on 429; else exponential backoff, capped at 30s."""
+    exc = retry_state.outcome.exception() if retry_state.outcome else None
+    resp = getattr(exc, "response", None)
+    if resp is not None:
+        retry_after = resp.headers.get("Retry-After")
+        if retry_after:
+            try:
+                return min(float(retry_after), 30.0)
+            except ValueError:
+                pass  # HTTP-date form — fall through to exponential backoff
+    return min(2.0 * (2 ** (retry_state.attempt_number - 1)), 30.0)
+
+
+_SUBSTACK_RETRY = dict(
+    stop=stop_after_attempt(4),
+    wait=_wait_substack_backoff,
+    retry=(
+        retry_if_exception_type((requests.Timeout, requests.ConnectionError))
+        | retry_if_exception(_is_rate_limited)
+    ),
+    reraise=True,
 )
+
+
+@retry(**_SUBSTACK_RETRY)
 def fetch_archive(
     publication_url: str,
     limit: int = 10,
@@ -63,26 +97,33 @@ def fetch_archive(
     return data
 
 
-@retry(
-    stop=stop_after_attempt(2),
-    wait=wait_fixed(2),
-    retry=retry_if_exception_type((requests.Timeout, requests.ConnectionError)),
-)
-def fetch_post_content(publication_url: str, slug: str, timeout: int = 15) -> str | None:
-    """Fetch full body_html for a single post by slug.
-
-    Returns HTML string, or None on failure.
-    """
+@retry(**_SUBSTACK_RETRY)
+def _fetch_post_content_raw(publication_url: str, slug: str, timeout: int = 15) -> str | None:
+    """Fetch body_html for a post. Raises on 429 (retried) and network errors; returns None on other HTTP errors."""
     base = publication_url.rstrip("/")
     url = f"{base}/api/v1/posts/{slug}"
 
+    resp = _session.get(url, timeout=timeout)
     try:
-        resp = _session.get(url, timeout=timeout)
         resp.raise_for_status()
-        data = resp.json()
-        return data.get("body_html")
     except requests.HTTPError as e:
+        if _is_rate_limited(e):
+            raise  # let tenacity back off and retry
         logger.warning(f"Failed to fetch content for {slug} from {base}: {e}")
+        return None
+    return resp.json().get("body_html")
+
+
+def fetch_post_content(publication_url: str, slug: str, timeout: int = 15) -> str | None:
+    """Fetch full body_html for a single post by slug.
+
+    Returns HTML string, or None on failure (including rate-limiting that
+    survives all retries) — preserves the None-on-failure contract callers rely on.
+    """
+    try:
+        return _fetch_post_content_raw(publication_url, slug, timeout)
+    except (requests.HTTPError, requests.Timeout, requests.ConnectionError) as e:
+        logger.warning(f"Failed to fetch content for {slug} after retries: {e}")
         return None
 
 
